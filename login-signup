@@ -1,0 +1,169 @@
+<template>
+  <div class="home">
+    <div class="container">
+      <h1>{{msg}}</h1>
+      <div v-if="currentView == 'login'">
+        Log In or  <button class="button is-small" @click="setView('signup')">Sign up</button>
+        <div id="error">{{userLoginError}}</div>
+        <form action="#" method="post" id="login" @submit.prevent="loginSubmit">
+          <div class="field">
+            <div class="control has-icons-left">
+              <input type="email" class="input" v-model="user.email" placeholder="Enter your email"/>
+              <span class="icon is-small is-left">
+                <i class="fa fa-envelope"></i>
+              </span>
+            </div>
+            <div class="control has-icons-left">
+              <input type="password" class="input" v-model="user.password" placeholder="Enter your password"/>
+              <span class="icon is-small is-left">
+                <i class="fa fa-key"></i>
+              </span>
+            </div>
+            <div class="control">
+              <button type="submit" class="button is-primary">Log in</button>
+            </div>
+          </div>
+         </form>
+      </div>
+
+      <div v-if="currentView == 'signup'">
+        Sign Up  or  <button class="button is-small" @click="setView('login')">Log in</button>
+        <form action="#" method="post" @submit.prevent="signupSubmit">
+          <div class="field">
+              <div class="control has-icons-left">
+                <input type="text" class="input" v-model="user.fname" placeholder="Enter your first name" />
+                <span class="icon is-small is-left">
+                  <i class="fa fa-user"></i>
+                </span>
+              </div>
+              <div class="control has-icons-left">
+                <input type="text" class="input" v-model="user.lname" placeholder="Enter your last name" />
+                <span class="icon is-small is-left">
+                  <i class="fa fa-user"></i>
+                </span>
+              </div>
+              <div class="control has-icons-left">
+                <input type="email" class="input" v-model="user.email" placeholder="Enter your email" />
+                <span class="icon is-small is-left">
+                  <i class="fa fa-envelope"></i>
+                </span>
+              </div>
+              <div class="control has-icons-left">
+                <input type="password" class="input" v-model="user.password" placeholder="Enter your password" />
+                <span class="icon is-small is-left">
+                  <i class="fa fa-key"></i>
+                </span>
+              </div>
+              <div class="control has-icons-left">
+                <input type="tel" class="input" v-model="user.phone" placeholder="Enter your cell number" />
+                <span class="icon is-small is-left">
+                  <i class="fa fa-phone"></i>
+                </span>
+              </div>
+              <div class="control">
+                <div class="select is-fullwidth">
+                  <select class="carrieir_list" v-model="user.carrier_id">
+                    <option value="" selected>Select your carrier</option>
+                    <option v-for="carrier in carriers" v-bind:value="carrier.id">
+                        {{ carrier.carrier }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="control">
+                <div class="select is-fullwidth">
+                  <select v-model="user.default_method_id">
+                    <option value="" selected>Select preferred method</option>
+                      <option value="1">SMS</option>
+                      <option value="2">Email</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="control has-icons-left">
+                <input type="text" class="input" v-model="user.invitation" placeholder="Invitation Code">
+                <span class="icon is-small is-left">
+                  <i class="fa fa-gift"></i>
+                </span>
+              </div>
+              <div class="control">
+                <button type="submit" class="button is-info">Submit</button>
+              </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'home',
+  data() {
+    return {
+      msg:'Welcome to Get The Vine!',
+      currentView: 'login',
+      user: {
+        fname: '',
+        lname: '',
+        email: '',
+        password: '',
+        phone:'',
+        carrier_id:'',
+        default_method_id:'',
+        invitation:'',
+      },
+      carriers: [],
+      userLoginError: '',
+
+    }
+  },
+  methods: {
+    setView(showDiv){
+        this.currentView = showDiv;
+    },
+    loginSubmit(e){
+      let myUser = JSON.stringify(this.user);
+      //alert(myUser);
+      this.$http.post('//[MY API]/users/login', myUser)
+      .then(function(userData){
+          if(userData.data.error.code != 200){
+            this.userLoginError = userData.data.error.message;
+          } else {
+          //  console.log(userData.data.subscriptions)
+            //console.log(userData.data.streams)
+
+            this.$localStorage.set('id', userData.data.id);
+            this.$localStorage.set('bearer', userData.data.bearer);
+            this.$router.push('Dashboard?id='+userData.data.id);
+          }
+      });
+    },
+    signupSubmit(){
+      let myUser = JSON.stringify(this.user);
+      //alert(myUser);
+      this.$http.post('//[MY API]/users/add', myUser)
+      .then(function(userData){
+          if(userData.data.error.code != 200){
+            this.userLoginError = userData.data.error.message;
+          } else {
+            this.$localStorage.set('id', userData.data.id);
+            this.$localStorage.set('bearer', userData.data.bearer);
+            this.$router.push('Dashboard?id='+userData.data.id);
+          }
+      });
+    }
+
+  },
+  //  computed: {
+  //
+  //  },
+  created(){
+      this.$http.get('//[MY API]/carriers')
+      .then(function(response){
+        //console.log(response.data)
+        this.carriers = response.data;
+      })
+  }
+}
+</script>
